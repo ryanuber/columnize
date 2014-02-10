@@ -29,7 +29,7 @@ func getWidthsFromLines(lines []string, delim string) []int {
 			} else if widths[i] < len(elem.(string)) {
 				widths[i] = len(elem.(string))
 			}
-			i += 1
+			i++
 		}
 	}
 	return widths
@@ -49,9 +49,14 @@ func Columnize(input []string, delim string) string {
 	}
 
 	// Create the formatted output using the format string
+	i := 0
 	for _, line := range input {
 		elems := getElementsFromLine(line, delim)
+		for a := len(elems); a < len(widths); a++ {
+			elems = append(elems, "")
+		}
 		result += fmt.Sprintf(stringfmt+"\n", elems...)
+		i++
 	}
 	return strings.TrimSpace(result)
 }

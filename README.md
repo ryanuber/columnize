@@ -36,3 +36,6 @@ Name   Gender  Age
 Bob    Male    38
 Sally  Female  26
 ```
+
+Columnize is tolerant of missing or empty fields, or even empty lines, so
+passing in extra lines for spacing should show up as you would expect.
