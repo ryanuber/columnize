@@ -5,48 +5,53 @@ import (
 	"strings"
 )
 
-func Columnize(input []string, delim string) string {
-	var stringfmt string
-	var result string
-	var width []int
+// Returns a list of elements, each representing a single item which will
+// belong to a column of output.
+func getElementsFromLine(line string, delim string) []interface{} {
+	elements := make([]interface{}, 0)
+	for _, field := range strings.Split(line, delim) {
+		elements = append(elements, strings.TrimSpace(field))
+	}
+	return elements
+}
 
-	// This loop figures out the widths for each column
-	for _, line := range input {
-		var elems []string
-		for _, field := range strings.Split(line, delim) {
-			elems = append(elems, strings.TrimSpace(field))
-		}
-		numFields := len(elems)
-		for i:= 0; i < numFields && i > len(elems); i-- {
-			elems = append(elems, "")
-		}
+// Examines a list of strings and determines how wide each column should be
+// considering all of the elements that need to be printed within it.
+func getWidthsFromLines(lines []string, delim string) []int {
+	var widths []int
+
+	for _, line := range lines {
+		elems := getElementsFromLine(line, delim)
 		i := 0
 		for _, elem := range elems {
-			if len(width) <= i {
-				width = append(width, len(elem))
-			} else if width[i] < len(elem) {
-				width[i] = len(elem)
+			if len(widths) <= i {
+				widths = append(widths, len(elem.(string)))
+			} else if widths[i] < len(elem.(string)) {
+				widths[i] = len(elem.(string))
 			}
 			i += 1
 		}
 	}
+	return widths
+}
 
-	// This loop creates the format string from the discovered widths
-	for _, w := range width {
+// Columnize is the public-facing interface that takes a list of strings and a
+// delimiter, and returns nicely aligned output.
+func Columnize(input []string, delim string) string {
+	var stringfmt string
+	var result string
+
+	widths := getWidthsFromLines(input, delim)
+
+	// Create the format string from the discovered widths
+	for _, w := range widths {
 		stringfmt += fmt.Sprintf("%%-%ds  ", w)
 	}
 
-	// This loop creates the formatted output using the format string
+	// Create the formatted output using the format string
 	for _, line := range input {
-		elems := make([]interface{}, 0)
-		for _, field := range strings.Split(line, delim) {
-			elems = append(elems, strings.TrimSpace(field))
-		}
+		elems := getElementsFromLine(line, delim)
 		result += fmt.Sprintf(stringfmt+"\n", elems...)
 	}
 	return result
-}
-
-func ColumnizeByPipe(input []string) string {
-	return Columnize(input, "|")
 }
