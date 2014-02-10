@@ -53,5 +53,5 @@ func Columnize(input []string, delim string) string {
 		elems := getElementsFromLine(line, delim)
 		result += fmt.Sprintf(stringfmt+"\n", elems...)
 	}
-	return result
+	return strings.TrimSpace(result)
 }
