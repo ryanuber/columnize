@@ -47,6 +47,6 @@ func Columnize(input []string, delim string) (string, error) {
 	return result, nil
 }
 
-func ColumnizeByPipe(input string) string {
+func ColumnizeByPipe(input []string) string {
 	return Columnize(input, "|")
 }
