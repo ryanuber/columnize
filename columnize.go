@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func Columnize(input []string, delim string) (string, error) {
+func Columnize(input []string, delim string) string {
 	var stringfmt string
 	var result string
 	var width []int
@@ -44,7 +44,7 @@ func Columnize(input []string, delim string) (string, error) {
 		}
 		result += fmt.Sprintf(stringfmt+"\n", elems...)
 	}
-	return result, nil
+	return result
 }
 
 func ColumnizeByPipe(input []string) string {
