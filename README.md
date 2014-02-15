@@ -10,7 +10,7 @@ to make each column is a boring problem to solve and eats your valuable time.
 
 Here is an example:
 
-```
+```go
 package main
 
 import (
@@ -44,7 +44,7 @@ Columnize will also accept a plain string as input. This makes it easy if you
 already have a CLI that can build up some output and just pass it through
 Columnize, like so
 
-```
+```go
 output := "Name | Gender | Age\n"
 output += "Bob | Male | 38\n"
 output += "Sally | Female | 26\n"
@@ -55,6 +55,6 @@ fmt.Println(columnize.SimpleFormat(output))
 You can fine-tune the format of the output by calling the `Format` method. This
 lets you set spacing and delimiter selection.
 
-```
+```go
 columnize.Format(input string, delim string, space string)
 ```
