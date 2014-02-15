@@ -52,9 +52,9 @@ func getStringFormat(widths []int, columns int, space string) string {
 	return stringfmt
 }
 
-// doColumnize is the public-facing interface that takes either a plain string
+// Format is the public-facing interface that takes either a plain string
 // or a list of strings, plus a delimiter, and returns nicely aligned output.
-func Columnize(input interface{}, delim string, space string) (string, error) {
+func Format(input interface{}, delim string, space string) (string, error) {
 	var result string
 	var lines []string
 
@@ -82,4 +82,9 @@ func Columnize(input interface{}, delim string, space string) (string, error) {
 		result += fmt.Sprintf(stringfmt, elems...)
 	}
 	return strings.TrimSpace(result), nil
+}
+
+// Convenience function for using Columnize as easy as possible.
+func SimpleFormat(input interface{}) (string, error) {
+	return Format(input, "|", "  ")
 }

@@ -24,7 +24,7 @@ func main() {
         "Bob | Male | 38",
         "Sally | Female | 26",
     }
-    fmt.Println(columnize.Columnize(output, "|"))
+    fmt.Println(columnize.SimpleFormat(output))
 }
 ```
 
@@ -39,3 +39,22 @@ Sally  Female  26
 
 Columnize is tolerant of missing or empty fields, or even empty lines, so
 passing in extra lines for spacing should show up as you would expect.
+
+Columnize will also accept a plain string as input. This makes it easy if you
+already have a CLI that can build up some output and just pass it through
+Columnize, like so
+
+```
+output := "Name | Gender | Age\n"
+output += "Bob | Male | 38\n"
+output += "Sally | Female | 26\n"
+
+fmt.Println(columnize.SimpleFormat(output))
+```
+
+You can fine-tune the format of the output by calling the `Format` method. This
+lets you set spacing and delimiter selection.
+
+```
+columnize.Format(input string, delim string, space string)
+```
