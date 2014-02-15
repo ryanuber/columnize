@@ -35,32 +35,35 @@ func getWidthsFromLines(lines []string, delim string) []int {
 	return widths
 }
 
-// Columnize is the public-facing interface that takes a list of strings and a
-// delimiter, and returns nicely aligned output.
-func Columnize(input []string, delim string) string {
+// Given a set of column widths and the number of columns in the current line,
+// returns a sprintf-style format string which can be used to print output
+// aligned properly with other lines using the same widths set.
+func getStringFormat(widths []int, columns int) string {
 	var stringfmt string
-	var result string
-
-	widths := getWidthsFromLines(input, delim)
 
 	// Create the format string from the discovered widths
-	for i := 0; i < len(widths); i++ {
-		if i == len(widths)-1 {
+	for i := 0; i < columns && i < len(widths); i++ {
+		if i == columns-1 {
 			stringfmt += "%s\n"
 		} else {
 			stringfmt += fmt.Sprintf("%%-%ds", widths[i]+2)
 		}
 	}
+	return stringfmt
+}
+
+// Columnize is the public-facing interface that takes a list of strings and a
+// delimiter, and returns nicely aligned output.
+func Columnize(input []string, delim string) string {
+	var result string
+
+	widths := getWidthsFromLines(input, delim)
 
 	// Create the formatted output using the format string
-	i := 0
 	for _, line := range input {
 		elems := getElementsFromLine(line, delim)
-		for a := len(elems); a < len(widths); a++ {
-			elems = append(elems, "")
-		}
+		stringfmt := getStringFormat(widths, len(elems))
 		result += fmt.Sprintf(stringfmt, elems...)
-		i++
 	}
 	return strings.TrimSpace(result)
 }
