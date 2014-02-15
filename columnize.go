@@ -38,7 +38,7 @@ func getWidthsFromLines(lines []string, delim string) []int {
 // Given a set of column widths and the number of columns in the current line,
 // returns a sprintf-style format string which can be used to print output
 // aligned properly with other lines using the same widths set.
-func getStringFormat(widths []int, columns int) string {
+func getStringFormat(widths []int, columns int, space string) string {
 	var stringfmt string
 
 	// Create the format string from the discovered widths
@@ -46,24 +46,40 @@ func getStringFormat(widths []int, columns int) string {
 		if i == columns-1 {
 			stringfmt += "%s\n"
 		} else {
-			stringfmt += fmt.Sprintf("%%-%ds", widths[i]+2)
+			stringfmt += fmt.Sprintf("%%-%ds%s", widths[i], space)
 		}
 	}
 	return stringfmt
 }
 
-// Columnize is the public-facing interface that takes a list of strings and a
-// delimiter, and returns nicely aligned output.
-func Columnize(input []string, delim string) string {
+// doColumnize is the public-facing interface that takes either a plain string
+// or a list of strings, plus a delimiter, and returns nicely aligned output.
+func Columnize(input interface{}, delim string, space string) (string, error) {
 	var result string
+	var lines []string
 
-	widths := getWidthsFromLines(input, delim)
+	switch in := input.(type) {
+		case string:
+			for _, line := range strings.Split(in, "\n") {
+				lines = append(lines, line)
+			}
+
+		case []string:
+			for _, line := range in {
+				lines = append(lines, line)
+			}
+
+		default:
+			return "", fmt.Errorf("columnize: Expected string or []string")
+	}
+
+	widths := getWidthsFromLines(lines, delim)
 
 	// Create the formatted output using the format string
-	for _, line := range input {
+	for _, line := range lines {
 		elems := getElementsFromLine(line, delim)
-		stringfmt := getStringFormat(widths, len(elems))
+		stringfmt := getStringFormat(widths, len(elems), space)
 		result += fmt.Sprintf(stringfmt, elems...)
 	}
-	return strings.TrimSpace(result)
+	return strings.TrimSpace(result), nil
 }
