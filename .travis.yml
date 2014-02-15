@@ -1,0 +1,6 @@
+language: go
+go:
+  - tip
+
+script:
+  - go list ./... | xargs -n1 go test
