@@ -55,7 +55,7 @@ func Columnize(input []string, delim string) string {
 		for a := len(elems); a < len(widths); a++ {
 			elems = append(elems, "")
 		}
-		result += fmt.Sprintf(stringfmt+"\n", elems...)
+		result += strings.TrimRight(fmt.Sprintf(stringfmt, elems...), " ")+"\n"
 		i++
 	}
 	return strings.TrimSpace(result)
