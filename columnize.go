@@ -44,8 +44,12 @@ func Columnize(input []string, delim string) string {
 	widths := getWidthsFromLines(input, delim)
 
 	// Create the format string from the discovered widths
-	for _, w := range widths {
-		stringfmt += fmt.Sprintf("%%-%ds  ", w)
+	for i := 0; i < len(widths); i++ {
+		if i == len(widths)-1 {
+			stringfmt += "%s\n"
+		} else {
+			stringfmt += fmt.Sprintf("%%-%ds", widths[i]+2)
+		}
 	}
 
 	// Create the formatted output using the format string
@@ -55,7 +59,7 @@ func Columnize(input []string, delim string) string {
 		for a := len(elems); a < len(widths); a++ {
 			elems = append(elems, "")
 		}
-		result += strings.TrimRight(fmt.Sprintf(stringfmt, elems...), " ")+"\n"
+		result += fmt.Sprintf(stringfmt, elems...)
 		i++
 	}
 	return strings.TrimSpace(result)
