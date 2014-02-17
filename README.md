@@ -26,7 +26,8 @@ func main() {
         "Bob | Male | 38",
         "Sally | Female | 26",
     }
-    fmt.Println(columnize.SimpleFormat(output))
+    result, _ := columnize.SimpleFormat(output)
+    fmt.Println(result)
 }
 ```
 
@@ -51,12 +52,18 @@ output := "Name | Gender | Age\n"
 output += "Bob | Male | 38\n"
 output += "Sally | Female | 26\n"
 
-fmt.Println(columnize.SimpleFormat(output))
+result, _ := columnize.SimpleFormat(output)
+fmt.Println(result)
 ```
 
 You can fine-tune the format of the output by calling the `Format` method. This
 lets you set spacing and delimiter selection.
 
+Usage
+=====
+
 ```go
-columnize.Format(input string, delim string, space string)
+SimpleFormat(intput interface{}) (string, error)
+
+Format(input interface{}, delim string, space string) (string, error)
 ```
