@@ -117,6 +117,18 @@ func TestAlternateSpacingString(t *testing.T) {
 	}
 }
 
+func TestInvalidInputType(t *testing.T) {
+	input := map[string]string{
+		"test": "blah",
+	}
+
+	_, err := Format(input, "|", "  ")
+
+	if err == nil {
+		t.Fatalf("Expected error while passing map[string]string")
+	}
+}
+
 func TestSimpleFormat(t *testing.T) {
 	input := []string{
 		"Column A | Column B | Column C",
