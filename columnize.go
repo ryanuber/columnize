@@ -22,14 +22,12 @@ func getWidthsFromLines(lines []string, delim string) []int {
 
 	for _, line := range lines {
 		elems := getElementsFromLine(line, delim)
-		i := 0
-		for _, elem := range elems {
+		for i := 0; i < len(elems); i++ {
 			if len(widths) <= i {
-				widths = append(widths, len(elem.(string)))
-			} else if widths[i] < len(elem.(string)) {
-				widths[i] = len(elem.(string))
+				widths = append(widths, len(elems[i].(string)))
+			} else if widths[i] < len(elems[i].(string)) {
+				widths[i] = len(elems[i].(string))
 			}
-			i++
 		}
 	}
 	return widths
