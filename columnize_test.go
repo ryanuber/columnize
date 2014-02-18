@@ -50,6 +50,24 @@ func TestEmptyLinesOutput(t *testing.T) {
 	}
 }
 
+func TestColumnWidthCalculator(t *testing.T) {
+	input := []string{
+		"Column A | Column B | Column C",
+		"Longer than A | Longer than B | Longer than C",
+		"short | short | short",
+	}
+
+	output, _ := Format(input, "|", "  ")
+
+	expected := "Column A       Column B       Column C\n"
+	expected += "Longer than A  Longer than B  Longer than C\n"
+	expected += "short          short          short"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
 func TestVariedInputSpacing(t *testing.T) {
 	input := []string{
 		"Column A       |Column B|    Column C",

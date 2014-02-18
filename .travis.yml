@@ -1,6 +1,9 @@
 language: go
 go:
   - tip
-
+before_install:
+  - go get github.com/axw/gocov/gocov
+  - go get github.com/mattn/goveralls
+  - go get code.google.com/p/go.tools/cmd/cover
 script:
-  - go list ./... | xargs -n1 go test
+  - $HOME/gopath/bin/goveralls
