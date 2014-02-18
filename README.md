@@ -4,6 +4,7 @@ Columnize
 Easy column-formatted output for golang
 
 [![Build Status](https://travis-ci.org/ryanuber/columnize.png)](https://travis-ci.org/ryanuber/columnize)
+[![Coverage Status](https://coveralls.io/repos/ryanuber/columnize/badge.png?branch=master)](https://coveralls.io/r/ryanuber/columnize?branch=master)
 
 Columnize is a really small Go package that makes building CLI's a little bit
 easier. In some CLI designs, you want to output a number similar items in a
