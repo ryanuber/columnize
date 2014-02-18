@@ -76,7 +76,6 @@ func TestVariedInputSpacing(t *testing.T) {
 
 	output, _ := Format(input, "|", "  ")
 
-
 	expected := "Column A  Column B  Column C\n"
 	expected += "x         y         z"
 

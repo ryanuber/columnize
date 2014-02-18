@@ -57,18 +57,18 @@ func Format(input interface{}, delim string, space string) (string, error) {
 	var lines []string
 
 	switch in := input.(type) {
-		case string:
-			for _, line := range strings.Split(in, "\n") {
-				lines = append(lines, line)
-			}
+	case string:
+		for _, line := range strings.Split(in, "\n") {
+			lines = append(lines, line)
+		}
 
-		case []string:
-			for _, line := range in {
-				lines = append(lines, line)
-			}
+	case []string:
+		for _, line := range in {
+			lines = append(lines, line)
+		}
 
-		default:
-			return "", fmt.Errorf("columnize: Expected string or []string")
+	default:
+		return "", fmt.Errorf("columnize: Expected string or []string")
 	}
 
 	widths := getWidthsFromLines(lines, delim)
