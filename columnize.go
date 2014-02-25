@@ -63,9 +63,7 @@ func Format(input interface{}, delim string, space string) (string, error) {
 		}
 
 	case []string:
-		for _, line := range in {
-			lines = append(lines, line)
-		}
+		lines = in
 
 	default:
 		return "", fmt.Errorf("columnize: Expected string or []string")
