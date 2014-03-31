@@ -5,6 +5,22 @@ import (
 	"strings"
 )
 
+type Config struct {
+	// The string by which the lines of input will be split.
+	Delim string
+
+	// The string by which columns of output will be separated.
+	Glue string
+}
+
+// Returns a Config with default values.
+func DefaultConfig() *Config {
+	return &Config{
+		Delim: "|",
+		Glue:  "  ",
+	}
+}
+
 // Returns a list of elements, each representing a single item which will
 // belong to a column of output.
 func getElementsFromLine(line string, delim string) []interface{} {
@@ -52,7 +68,7 @@ func getStringFormat(widths []int, columns int, space string) string {
 
 // Format is the public-facing interface that takes either a plain string
 // or a list of strings, plus a delimiter, and returns nicely aligned output.
-func Format(input interface{}, delim string, space string) (string, error) {
+func Format(input interface{}, config *Config) (string, error) {
 	var result string
 	var lines []string
 
@@ -69,12 +85,12 @@ func Format(input interface{}, delim string, space string) (string, error) {
 		return "", fmt.Errorf("columnize: Expected string or []string")
 	}
 
-	widths := getWidthsFromLines(lines, delim)
+	widths := getWidthsFromLines(lines, config.Delim)
 
 	// Create the formatted output using the format string
 	for _, line := range lines {
-		elems := getElementsFromLine(line, delim)
-		stringfmt := getStringFormat(widths, len(elems), space)
+		elems := getElementsFromLine(line, config.Delim)
+		stringfmt := getStringFormat(widths, len(elems), config.Glue)
 		result += fmt.Sprintf(stringfmt, elems...)
 	}
 	return strings.TrimSpace(result), nil
@@ -82,5 +98,6 @@ func Format(input interface{}, delim string, space string) (string, error) {
 
 // Convenience function for using Columnize as easy as possible.
 func SimpleFormat(input interface{}) (string, error) {
-	return Format(input, "|", "  ")
+	config := DefaultConfig()
+	return Format(input, config)
 }
