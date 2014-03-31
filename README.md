@@ -57,8 +57,20 @@ result, _ := columnize.SimpleFormat(output)
 fmt.Println(result)
 ```
 
-You can fine-tune the format of the output by calling the `Format` method. This
-lets you set spacing and delimiter selection.
+# Configuration
+
+Columnize is configured using a `Config`, which can be obtained by calling the
+`DefaultConfig()` method. You can then tweak the settings in the resulting
+`Config`:
+
+```
+config := columnize.DefaultConfig()
+config.Delim = "|"
+config.Glue = "  "
+```
+
+You can then pass the `Config` in using the `Format` method (signature below) to
+have text formatted to your liking.
 
 Usage
 =====
@@ -66,5 +78,5 @@ Usage
 ```go
 SimpleFormat(intput interface{}) (string, error)
 
-Format(input interface{}, delim string, space string) (string, error)
+Format(input interface{}, config *Config) (string, error)
 ```
