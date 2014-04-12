@@ -93,7 +93,13 @@ func Format(input interface{}, config *Config) (string, error) {
 		stringfmt := getStringFormat(widths, len(elems), config.Glue)
 		result += fmt.Sprintf(stringfmt, elems...)
 	}
-	return strings.TrimSpace(result), nil
+
+	// Remove trailing newline without removing leading/trailing space
+	if n := len(result); result[n-1] == '\n' {
+		result = result[:n-1]
+	}
+
+	return result, nil
 }
 
 // Convenience function for using Columnize as easy as possible.

@@ -53,6 +53,23 @@ func TestEmptyLinesOutput(t *testing.T) {
 	}
 }
 
+func TestLeadingSpacePreserved(t *testing.T) {
+	input := []string{
+		"| Column B | Column C",
+		"x | y | z",
+	}
+
+	config := DefaultConfig()
+	output, _ := Format(input, config)
+
+	expected := "   Column B  Column C\n"
+	expected += "x  y         z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
 func TestColumnWidthCalculator(t *testing.T) {
 	input := []string{
 		"Column A | Column B | Column C",
