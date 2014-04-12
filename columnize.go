@@ -95,7 +95,7 @@ func Format(input interface{}, config *Config) (string, error) {
 	}
 
 	// Remove trailing newline without removing leading/trailing space
-	if n := len(result); result[n-1] == '\n' {
+	if n := len(result); n > 0 && result[n-1] == '\n' {
 		result = result[:n-1]
 	}
 
