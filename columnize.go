@@ -39,10 +39,11 @@ func getWidthsFromLines(lines []string, delim string) []int {
 	for _, line := range lines {
 		elems := getElementsFromLine(line, delim)
 		for i := 0; i < len(elems); i++ {
+			l := len(elems[i].(string))
 			if len(widths) <= i {
-				widths = append(widths, len(elems[i].(string)))
-			} else if widths[i] < len(elems[i].(string)) {
-				widths[i] = len(elems[i].(string))
+				widths = append(widths, l)
+			} else if widths[i] < l {
+				widths[i] = l
 			}
 		}
 	}
@@ -67,22 +68,20 @@ func getStringFormat(widths []int, columns int, space string) string {
 }
 
 // Format is the public-facing interface that takes either a plain string
-// or a list of strings, plus a delimiter, and returns nicely aligned output.
-func Format(input interface{}, config *Config) (string, error) {
+// or a list of strings and returns nicely aligned output.
+func Format(input interface{}, config *Config) string {
 	var result string
 	var lines []string
 
 	switch in := input.(type) {
 	case string:
-		for _, line := range strings.Split(in, "\n") {
-			lines = append(lines, line)
-		}
+		lines = strings.Split(in, "\n")
 
 	case []string:
 		lines = in
 
 	default:
-		return "", fmt.Errorf("columnize: Expected string or []string")
+		panic("Expected string or []string")
 	}
 
 	widths := getWidthsFromLines(lines, config.Delim)
@@ -99,11 +98,11 @@ func Format(input interface{}, config *Config) (string, error) {
 		result = result[:n-1]
 	}
 
-	return result, nil
+	return result
 }
 
 // Convenience function for using Columnize as easy as possible.
-func SimpleFormat(input interface{}) (string, error) {
+func SimpleFormat(input interface{}) string {
 	config := DefaultConfig()
 	return Format(input, config)
 }

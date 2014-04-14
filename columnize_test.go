@@ -9,7 +9,7 @@ func TestListOfStringsInput(t *testing.T) {
 	}
 
 	config := DefaultConfig()
-	output, _ := Format(input, config)
+	output := Format(input, config)
 
 	expected := "Column A  Column B  Column C\n"
 	expected += "x         y         z"
@@ -24,7 +24,7 @@ func TestStringInput(t *testing.T) {
 	input += "x | y | z"
 
 	config := DefaultConfig()
-	output, _ := Format(input, config)
+	output := Format(input, config)
 
 	expected := "Column A  Column B  Column C\n"
 	expected += "x         y         z"
@@ -42,7 +42,7 @@ func TestEmptyLinesOutput(t *testing.T) {
 	}
 
 	config := DefaultConfig()
-	output, _ := Format(input, config)
+	output := Format(input, config)
 
 	expected := "Column A  Column B  Column C\n"
 	expected += "\n"
@@ -60,7 +60,7 @@ func TestLeadingSpacePreserved(t *testing.T) {
 	}
 
 	config := DefaultConfig()
-	output, _ := Format(input, config)
+	output := Format(input, config)
 
 	expected := "   Column B  Column C\n"
 	expected += "x  y         z"
@@ -78,7 +78,7 @@ func TestColumnWidthCalculator(t *testing.T) {
 	}
 
 	config := DefaultConfig()
-	output, _ := Format(input, config)
+	output := Format(input, config)
 
 	expected := "Column A       Column B       Column C\n"
 	expected += "Longer than A  Longer than B  Longer than C\n"
@@ -96,7 +96,7 @@ func TestVariedInputSpacing(t *testing.T) {
 	}
 
 	config := DefaultConfig()
-	output, _ := Format(input, config)
+	output := Format(input, config)
 
 	expected := "Column A  Column B  Column C\n"
 	expected += "x         y         z"
@@ -114,7 +114,7 @@ func TestUnmatchedColumnCounts(t *testing.T) {
 	}
 
 	config := DefaultConfig()
-	output, _ := Format(input, config)
+	output := Format(input, config)
 
 	expected := "Column A  Column B  Column C\n"
 	expected += "Value A   Value B\n"
@@ -133,7 +133,7 @@ func TestAlternateDelimiter(t *testing.T) {
 
 	config := DefaultConfig()
 	config.Delim = "%"
-	output, _ := Format(input, config)
+	output := Format(input, config)
 
 	expected := "Column | A  Column | B  Column | C\n"
 	expected += "Value A     Value B     Value C"
@@ -151,7 +151,7 @@ func TestAlternateSpacingString(t *testing.T) {
 
 	config := DefaultConfig()
 	config.Glue = "    "
-	output, _ := Format(input, config)
+	output := Format(input, config)
 
 	expected := "Column A    Column B    Column C\n"
 	expected += "x           y           z"
@@ -161,26 +161,13 @@ func TestAlternateSpacingString(t *testing.T) {
 	}
 }
 
-func TestInvalidInputType(t *testing.T) {
-	input := map[string]string{
-		"test": "blah",
-	}
-
-	config := DefaultConfig()
-	_, err := Format(input, config)
-
-	if err == nil {
-		t.Fatalf("Expected error while passing map[string]string")
-	}
-}
-
 func TestSimpleFormat(t *testing.T) {
 	input := []string{
 		"Column A | Column B | Column C",
 		"x | y | z",
 	}
 
-	output, _ := SimpleFormat(input)
+	output := SimpleFormat(input)
 
 	expected := "Column A  Column B  Column C\n"
 	expected += "x         y         z"
@@ -188,4 +175,17 @@ func TestSimpleFormat(t *testing.T) {
 	if output != expected {
 		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
 	}
+}
+
+func TestBadOptions(t *testing.T) {
+	input := 123
+	config := DefaultConfig()
+
+	defer func() {
+		if recover() == nil {
+			t.Fatalf("Expected panic passing unsupported type")
+		}
+	}()
+
+	Format(input, config)
 }

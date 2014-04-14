@@ -27,7 +27,7 @@ func main() {
         "Bob | Male | 38",
         "Sally | Female | 26",
     }
-    result, _ := columnize.SimpleFormat(output)
+    result := columnize.SimpleFormat(output)
     fmt.Println(result)
 }
 ```
@@ -53,11 +53,14 @@ output := "Name | Gender | Age\n"
 output += "Bob | Male | 38\n"
 output += "Sally | Female | 26\n"
 
-result, _ := columnize.SimpleFormat(output)
+result := columnize.SimpleFormat(output)
 fmt.Println(result)
 ```
 
-# Configuration
+Columnize will panic if it is passed a type other than `string` or `[]string`.
+
+Configuration
+=============
 
 Columnize is configured using a `Config`, which can be obtained by calling the
 `DefaultConfig()` method. You can then tweak the settings in the resulting
@@ -76,7 +79,7 @@ Usage
 =====
 
 ```go
-SimpleFormat(intput interface{}) (string, error)
+SimpleFormat(intput interface{}) string
 
-Format(input interface{}, config *Config) (string, error)
+Format(input interface{}, config *Config) string
 ```
