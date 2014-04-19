@@ -69,20 +69,8 @@ func getStringFormat(widths []int, columns int, space string) string {
 
 // Format is the public-facing interface that takes either a plain string
 // or a list of strings and returns nicely aligned output.
-func Format(input interface{}, config *Config) string {
+func Format(lines []string, config *Config) string {
 	var result string
-	var lines []string
-
-	switch in := input.(type) {
-	case string:
-		lines = strings.Split(in, "\n")
-
-	case []string:
-		lines = in
-
-	default:
-		panic("Expected string or []string")
-	}
 
 	widths := getWidthsFromLines(lines, config.Delim)
 
@@ -102,7 +90,7 @@ func Format(input interface{}, config *Config) string {
 }
 
 // Convenience function for using Columnize as easy as possible.
-func SimpleFormat(input interface{}) string {
+func SimpleFormat(lines []string) string {
 	config := DefaultConfig()
-	return Format(input, config)
+	return Format(lines, config)
 }

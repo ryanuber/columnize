@@ -19,21 +19,6 @@ func TestListOfStringsInput(t *testing.T) {
 	}
 }
 
-func TestStringInput(t *testing.T) {
-	input := "Column A | Column B | Column C\n"
-	input += "x | y | z"
-
-	config := DefaultConfig()
-	output := Format(input, config)
-
-	expected := "Column A  Column B  Column C\n"
-	expected += "x         y         z"
-
-	if output != expected {
-		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
-	}
-}
-
 func TestEmptyLinesOutput(t *testing.T) {
 	input := []string{
 		"Column A | Column B | Column C",
@@ -175,17 +160,4 @@ func TestSimpleFormat(t *testing.T) {
 	if output != expected {
 		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
 	}
-}
-
-func TestBadOptions(t *testing.T) {
-	input := 123
-	config := DefaultConfig()
-
-	defer func() {
-		if recover() == nil {
-			t.Fatalf("Expected panic passing unsupported type")
-		}
-	}()
-
-	Format(input, config)
 }
