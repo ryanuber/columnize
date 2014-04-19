@@ -6,4 +6,4 @@ before_install:
   - go get github.com/mattn/goveralls
   - go get code.google.com/p/go.tools/cmd/cover
 script:
-  - $HOME/gopath/bin/goveralls -repotoken E9Trto8c7lAwRJkOQR89OoUJRgKscAhqM
+  - $GOPATH/bin/goveralls -repotoken E9Trto8c7lAwRJkOQR89OoUJRgKscAhqM
