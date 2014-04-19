@@ -32,8 +32,7 @@ func main() {
 }
 ```
 
-As you can see, you just give it a list of strings and a delimiter.
-And the result:
+As you can see, you just pass in a list of strings. And the result:
 
 ```
 Name   Gender  Age
@@ -43,21 +42,6 @@ Sally  Female  26
 
 Columnize is tolerant of missing or empty fields, or even empty lines, so
 passing in extra lines for spacing should show up as you would expect.
-
-Columnize will also accept a plain string as input. This makes it easy if you
-already have a CLI that can build up some output and just pass it through
-Columnize, like so
-
-```go
-output := "Name | Gender | Age\n"
-output += "Bob | Male | 38\n"
-output += "Sally | Female | 26\n"
-
-result := columnize.SimpleFormat(output)
-fmt.Println(result)
-```
-
-Columnize will panic if it is passed a type other than `string` or `[]string`.
 
 Configuration
 =============
@@ -79,7 +63,7 @@ Usage
 =====
 
 ```go
-SimpleFormat(intput interface{}) string
+SimpleFormat(intput []string) string
 
-Format(input interface{}, config *Config) string
+Format(input []string, config *Config) string
 ```
