@@ -161,3 +161,21 @@ func TestSimpleFormat(t *testing.T) {
 		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
 	}
 }
+
+func TestAlternatePrefixString(t *testing.T) {
+	input := []string{
+		"Column A | Column B | Column C",
+		"x | y | z",
+	}
+
+	config := DefaultConfig()
+	config.Prefix = "  "
+	output := Format(input, config)
+
+	expected := "  Column A  Column B  Column C\n"
+	expected += "  x         y         z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
