@@ -53,7 +53,12 @@ Columnize is configured using a `Config`, which can be obtained by calling the
 config := columnize.DefaultConfig()
 config.Delim = "|"
 config.Glue = "  "
+config.Prefix = ""
 ```
+
+* `Delim` is the string by which columns of **input** are delimited
+* `Glue` is the string by which columns of **output** are delimited
+* `Prefix` is a string by which each line of **output** is prefixed
 
 You can then pass the `Config` in using the `Format` method (signature below) to
 have text formatted to your liking.
