@@ -11,13 +11,17 @@ type Config struct {
 
 	// The string by which columns of output will be separated.
 	Glue string
+
+	// The string by which columns of output will be prefixed.
+	Prefix string
 }
 
 // Returns a Config with default values.
 func DefaultConfig() *Config {
 	return &Config{
-		Delim: "|",
-		Glue:  "  ",
+		Delim:  "|",
+		Glue:   "  ",
+		Prefix: "",
 	}
 }
 
@@ -78,7 +82,7 @@ func Format(lines []string, config *Config) string {
 	for _, line := range lines {
 		elems := getElementsFromLine(line, config.Delim)
 		stringfmt := getStringFormat(widths, len(elems), config.Glue)
-		result += fmt.Sprintf(stringfmt, elems...)
+		result += fmt.Sprintf(config.Prefix+stringfmt, elems...)
 	}
 
 	// Remove trailing newline without removing leading/trailing space
