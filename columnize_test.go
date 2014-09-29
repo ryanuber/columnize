@@ -179,3 +179,46 @@ func TestAlternatePrefixString(t *testing.T) {
 		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
 	}
 }
+
+func TestEmptyConfigValues(t *testing.T) {
+	input := []string{
+		"Column A | Column B | Column C",
+		"x | y | z",
+	}
+
+	config := Config{}
+	output := Format(input, &config)
+
+	expected := "Column A  Column B  Column C\n"
+	expected += "x         y         z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+func TestMergeConfig(t *testing.T) {
+	conf1 := &Config{Delim: "a", Glue: "a", Prefix: "a"}
+	conf2 := &Config{Delim: "b", Glue: "b", Prefix: "b"}
+	conf3 := &Config{Delim: "c", Prefix: "c"}
+
+	m := MergeConfig(conf1, conf2)
+	if m.Delim != "b" || m.Glue != "b" || m.Prefix != "b" {
+		t.Fatalf("bad: %#v", m)
+	}
+
+	m = MergeConfig(conf1, conf3)
+	if m.Delim != "c" || m.Glue != "a" || m.Prefix != "c" {
+		t.Fatalf("bad: %#v", m)
+	}
+
+	m = MergeConfig(conf1, nil)
+	if m.Delim != "a" || m.Glue != "a" || m.Prefix != "a" {
+		t.Fatalf("bad: %#v", m)
+	}
+
+	m = MergeConfig(conf1, &Config{})
+	if m.Delim != "a" || m.Glue != "a" || m.Prefix != "a" {
+		t.Fatalf("bad: %#v", m)
+	}
+}

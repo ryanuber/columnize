@@ -72,17 +72,41 @@ func (c *Config) getStringFormat(widths []int, columns int) string {
 	return stringfmt
 }
 
+// MergeConfig merges two config objects together and returns the resulting
+// configuration. Values from the right take precedence over the left side.
+func MergeConfig(a, b *Config) *Config {
+	var result Config = *a
+
+	// Return quickly if either side was nil
+	if a == nil || b == nil {
+		return &result
+	}
+
+	if b.Delim != "" {
+		result.Delim = b.Delim
+	}
+	if b.Glue != "" {
+		result.Glue = b.Glue
+	}
+	if b.Prefix != "" {
+		result.Prefix = b.Prefix
+	}
+
+	return &result
+}
+
 // Format is the public-facing interface that takes either a plain string
 // or a list of strings and returns nicely aligned output.
 func Format(lines []string, config *Config) string {
 	var result string
 
-	widths := getWidthsFromLines(lines, config.Delim)
+	conf := MergeConfig(DefaultConfig(), config)
+	widths := getWidthsFromLines(lines, conf.Delim)
 
 	// Create the formatted output using the format string
 	for _, line := range lines {
-		elems := getElementsFromLine(line, config.Delim)
-		stringfmt := config.getStringFormat(widths, len(elems))
+		elems := getElementsFromLine(line, conf.Delim)
+		stringfmt := conf.getStringFormat(widths, len(elems))
 		result += fmt.Sprintf(stringfmt, elems...)
 	}
 
@@ -96,6 +120,5 @@ func Format(lines []string, config *Config) string {
 
 // Convenience function for using Columnize as easy as possible.
 func SimpleFormat(lines []string) string {
-	config := DefaultConfig()
-	return Format(lines, config)
+	return Format(lines, nil)
 }
