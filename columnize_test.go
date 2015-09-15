@@ -180,6 +180,24 @@ func TestAlternatePrefixString(t *testing.T) {
 	}
 }
 
+func TestEmptyFieldReplacement(t *testing.T) {
+	input := []string{
+		"Column A | Column B | Column C",
+		"x | | z",
+	}
+
+	config := DefaultConfig()
+	config.Empty = "<none>"
+	output := Format(input, config)
+
+	expected := "Column A  Column B  Column C\n"
+	expected += "x         <none>    z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
 func TestEmptyConfigValues(t *testing.T) {
 	input := []string{
 		"Column A | Column B | Column C",
@@ -198,27 +216,27 @@ func TestEmptyConfigValues(t *testing.T) {
 }
 
 func TestMergeConfig(t *testing.T) {
-	conf1 := &Config{Delim: "a", Glue: "a", Prefix: "a"}
-	conf2 := &Config{Delim: "b", Glue: "b", Prefix: "b"}
+	conf1 := &Config{Delim: "a", Glue: "a", Prefix: "a", Empty: "a"}
+	conf2 := &Config{Delim: "b", Glue: "b", Prefix: "b", Empty: "b"}
 	conf3 := &Config{Delim: "c", Prefix: "c"}
 
 	m := MergeConfig(conf1, conf2)
-	if m.Delim != "b" || m.Glue != "b" || m.Prefix != "b" {
+	if m.Delim != "b" || m.Glue != "b" || m.Prefix != "b" || m.Empty != "b" {
 		t.Fatalf("bad: %#v", m)
 	}
 
 	m = MergeConfig(conf1, conf3)
-	if m.Delim != "c" || m.Glue != "a" || m.Prefix != "c" {
+	if m.Delim != "c" || m.Glue != "a" || m.Prefix != "c" || m.Empty != "a" {
 		t.Fatalf("bad: %#v", m)
 	}
 
 	m = MergeConfig(conf1, nil)
-	if m.Delim != "a" || m.Glue != "a" || m.Prefix != "a" {
+	if m.Delim != "a" || m.Glue != "a" || m.Prefix != "a" || m.Empty != "a" {
 		t.Fatalf("bad: %#v", m)
 	}
 
 	m = MergeConfig(conf1, &Config{})
-	if m.Delim != "a" || m.Glue != "a" || m.Prefix != "a" {
+	if m.Delim != "a" || m.Glue != "a" || m.Prefix != "a" || m.Empty != "a" {
 		t.Fatalf("bad: %#v", m)
 	}
 }
