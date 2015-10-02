@@ -3,6 +3,7 @@ package columnize
 import (
 	"fmt"
 	"strings"
+	"unicode"
 )
 
 type Config struct {
@@ -17,14 +18,21 @@ type Config struct {
 
 	// A replacement string to replace empty fields
 	Empty string
+
+	// Maximum width of each field
+	MaxWidth []int
+
+	// Index of a negative value within config.MaxWidth
+	negIndex int
 }
 
 // Returns a Config with default values.
 func DefaultConfig() *Config {
 	return &Config{
-		Delim:  "|",
-		Glue:   "  ",
-		Prefix: "",
+		Delim:    "|",
+		Glue:     "  ",
+		Prefix:   "",
+		MaxWidth: []int{},
 	}
 }
 
@@ -51,11 +59,35 @@ func getWidthsFromLines(config *Config, lines []string) []int {
 		elems := getElementsFromLine(config, line)
 		for i := 0; i < len(elems); i++ {
 			l := len(elems[i].(string))
+			if i < len(config.MaxWidth) && config.MaxWidth[i] > 0 && config.MaxWidth[i] < l {
+				l = config.MaxWidth[i]
+			}
 			if len(widths) <= i {
 				widths = append(widths, l)
 			} else if widths[i] < l {
 				widths[i] = l
 			}
+		}
+	}
+
+	// If one of the columns has a negative width specification, set its width
+	// so that the entire output line has a width of the absolute value of the spec
+
+	if config.negIndex >= 0 && config.negIndex < len(widths) {
+		maxOutputWidth := 0 - config.MaxWidth[config.negIndex]
+		if config.negIndex == 0 && len(config.MaxWidth) == 1 && len(widths) > 1 {
+			config.negIndex = len(widths) - 1 // Apply single negative value to last field
+		}
+		totalLineWidth := len(config.Prefix) + len(config.Glue)*(len(widths)-1)
+		for i, width := range widths {
+			if i != config.negIndex {
+				totalLineWidth += width
+			}
+		}
+		if maxOutputWidth > totalLineWidth {
+			widths[config.negIndex] = maxOutputWidth - totalLineWidth
+		} else {
+			config.negIndex = -1
 		}
 	}
 	return widths
@@ -83,6 +115,7 @@ func (c *Config) getStringFormat(widths []int, columns int) string {
 // configuration. Values from the right take precedence over the left side.
 func MergeConfig(a, b *Config) *Config {
 	var result Config = *a
+	result.negIndex = -1
 
 	// Return quickly if either side was nil
 	if a == nil || b == nil {
@@ -101,6 +134,25 @@ func MergeConfig(a, b *Config) *Config {
 	if b.Empty != "" {
 		result.Empty = b.Empty
 	}
+	if len(b.MaxWidth) > 0 {
+		for i, maxWidth := range b.MaxWidth {
+			if maxWidth < 0 {
+				// Negative width adjusts the column width so that the width of
+				// the entire output line is the abs value of the value specified.
+				// Only the first such specification is significant; others are ignored.
+				if result.negIndex < 0 {
+					result.negIndex = i
+				} else {
+					maxWidth = 0
+				}
+			}
+			if i < len(result.MaxWidth) {
+				result.MaxWidth[i] = maxWidth
+			} else {
+				result.MaxWidth = append(result.MaxWidth, maxWidth)
+			}
+		}
+	}
 
 	return &result
 }
@@ -116,8 +168,13 @@ func Format(lines []string, config *Config) string {
 	// Create the formatted output using the format string
 	for _, line := range lines {
 		elems := getElementsFromLine(conf, line)
-		stringfmt := conf.getStringFormat(widths, len(elems))
-		result += fmt.Sprintf(stringfmt, elems...)
+		extensionLineElems := []string{}
+		isStillDataToFormat := true
+		for isStillDataToFormat {
+			isStillDataToFormat = truncateToWidth(&elems, &extensionLineElems, widths)
+			stringfmt := conf.getStringFormat(widths, len(elems))
+			result += fmt.Sprintf(stringfmt, elems...)
+		}
 	}
 
 	// Remove trailing newline without removing leading/trailing space
@@ -131,4 +188,45 @@ func Format(lines []string, config *Config) string {
 // Convenience function for using Columnize as easy as possible.
 func SimpleFormat(lines []string) string {
 	return Format(lines, nil)
+}
+
+// Truncate any elements exceeding their maximum width, and save their remaining
+// data for an extension line.
+func truncateToWidth(elems *[]interface{}, extensionLineElems *[]string, widths []int) (isStillDataToFormat bool) {
+
+	// If this an extension line, make its list of elements current
+
+	if len(*extensionLineElems) > 0 {
+		for i, elem := range *extensionLineElems {
+			(*elems)[i] = elem
+		}
+		*extensionLineElems = []string{}
+	}
+
+	// Examine each element to determine if it exceeds its maximum allowed width.
+	// If so, truncate it at the closest whitespace to the limit and save its remaining
+	// data for the next extension line.
+
+	for i, elem := range *elems {
+		stringElem := strings.TrimSpace(fmt.Sprintf("%s", elem))
+		if len(stringElem) > widths[i] {
+			isStillDataToFormat = true
+			splitPoint := widths[i]
+			for ; splitPoint > 0; splitPoint-- {
+				if unicode.IsSpace(rune(stringElem[splitPoint])) {
+					break
+				}
+			}
+			if splitPoint == 0 {
+				splitPoint = widths[i]
+			}
+			(*elems)[i] = strings.TrimSpace(stringElem[:splitPoint])
+			if len(*extensionLineElems) == 0 {
+				(*extensionLineElems) = make([]string, len(*elems))
+			}
+			(*extensionLineElems)[i] = strings.TrimSpace(stringElem[splitPoint:])
+		}
+
+	}
+	return
 }
