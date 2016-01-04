@@ -284,7 +284,7 @@ func TestMaxWidth(t *testing.T) {
 	}
 }
 
-func TestOutputxWidth(t *testing.T) {
+func TestOutputWidth(t *testing.T) {
 	input := []string{
 		"Column a | Column b | Column c",
 		"xx | yy | zz",
