@@ -50,13 +50,17 @@ Columnize is configured using a `Config`, which can be obtained by calling the
     config.Glue = "  "
     config.Prefix = ""
     config.Empty = ""
-    config.MaxWidth = []int{10, 0, -80}
+    config.MaxWidth = []int{10, 0, 0}
+    config.OutputWidth = 80
 
 * `Delim` is the string by which columns of **input** are delimited
 * `Glue` is the string by which columns of **output** are delimited
 * `Prefix` is a string by which each line of **output** is prefixed
 * `Empty` is a string used to replace blank values found in output
-* `MaxWidth` is an int slice specifying the maximum width of each column.  Columns exceeding their configured width are broken at a word boundary and continued on the next line.  See below for details.
+* `MaxWidth` is an int slice specifying the maximum width of each column.
+* `OutputWidth` is an int specifying the maximum width of an output line.
+
+If MaxWidth or OutputWidth is specified and output exceeds the configured width, Columnize breaks a column at a word boundary and continues it on the next line.  See below for details.
 
 You can then pass the `Config` in using the `Format` method (signature below) to
 have text formatted to your liking.
@@ -68,9 +72,14 @@ Usage
 
     Format(input []string, config *Config) string
 
-Using MaxWidth
-==============
-The MaxWidth config element allows you to configure the maximum width of each column.  An input line with a data value exceeding the maximum width for a column is formatted into multiple lines, with each long column's data broken at a word boundary and continued on the line below.  For example:
+Controlling Output Width
+========================
+Output exceeding the width of the terminal window - particularly columnized output - can be difficult to read.  To address this, Columnize provides two configuration parameters for controlling output width.
+
+* `MaxWidth` is an int slice specifying the maximum width of each column.  If the data for a column exceeds its maximum width, Columnize formats the column into two or more lines by breaking its data at a word boundary and continuing it onto the next line.  A zero or missing value for a MaxWidth element specifies that the corresponding column is uncontrolled (no maximum width).
+* `OutputWidth` is an int value specifying the maximum width of the entire output line (including prefix and glue).  If data width exceeds this value, Columnize sets a MaxWidth for the rightmost uncontrolled column so that the output width satisfies the restriction.  You can specify `OutputWidth: columnize.AUTO` to use the actual width of the terminal window for OutputWidth.
+
+For example:
 
     input := []string{
 		"Column a | Column b | Column c",
@@ -95,20 +104,14 @@ results in the output:
                                 dog
     qq          rr              ss
 
-Columns without a MaxWidth value, or columns with a MaxWidth value of zero, expand to the maximum data width as normal.
+Specify OutputWidth to restrict the entire output line.  For example, the configuration:
 
-If you want to restrict the maximum width of the entire output line, specify a negative value for exactly one of the columns in a MaxWidth specification.  The inverse of the negative value is interpreted as the desired output line width, and columnize calculates a width for the designated column so that all output lines fit in the specified width.  As a convenience, if you want the last column of data to be the one with the calculated width, specify MaxWidth as a single-element array with a negative value.
+    config := Config{
+       OutputWidth: columnize.AUTO,
+    }
 
-For example, if you want no output line to exceed 80 characters, you could specify:
+causes the entire output line to fit in the terminal window.  Columnize modifies data lines exceeding the width of the window by setting the appropriate MaxWidth for the last column  of data.  Columnize adjusts the last uncontrolled column, so if you want it to adjust a column other than the last, specify an explicit MaxWidth for any columns to the right of the one you want Columnize to adjust.
 
-    config := Config{MaxWidth: []int{0, -80, 15}}
 
-This specification causes the first column to be the width of the largest piece of data in that column; the last column to be a maximum of 15 characters; and the middle column to have whatever maximum width is required so that no output line exceeds 80 characters in width.
-
-You could also specify:
-
-    config := Config{MaxWidth: []int{-80}}
-
-to request that no output line exceed 80 characters, with any line breaks occurring in the last data column.
 
 

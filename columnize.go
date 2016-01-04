@@ -2,6 +2,11 @@ package columnize
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"regexp"
+	"runtime"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -19,21 +24,36 @@ type Config struct {
 	// A replacement string to replace empty fields
 	Empty string
 
-	// Maximum width of each field
-	MaxWidth []int
+	// Maximum width of output; set to AUTO to use actual console width
+	OutputWidth int
 
-	// Index of a negative value within config.MaxWidth
-	negIndex int
+	// Maximum width of each column
+	MaxWidth []int
 }
+
+const (
+	AUTO = -1
+)
+
+var (
+	defaultConfig Config = Config{
+		Delim:       "|",
+		Glue:        "  ",
+		Prefix:      "",
+		OutputWidth: -999,
+		MaxWidth:    []int{},
+	}
+)
 
 // Returns a Config with default values.
 func DefaultConfig() *Config {
-	return &Config{
-		Delim:    "|",
-		Glue:     "  ",
-		Prefix:   "",
-		MaxWidth: []int{},
-	}
+	var defaultConfigCopy Config = defaultConfig
+	return &defaultConfigCopy
+}
+
+// Sets the default Config
+func SetDefaultConfig(config Config) {
+	defaultConfig = config
 }
 
 // Returns a list of elements, each representing a single item which will
@@ -58,36 +78,56 @@ func getWidthsFromLines(config *Config, lines []string) []int {
 	for _, line := range lines {
 		elems := getElementsFromLine(config, line)
 		for i := 0; i < len(elems); i++ {
-			l := len(elems[i].(string))
-			if i < len(config.MaxWidth) && config.MaxWidth[i] > 0 && config.MaxWidth[i] < l {
-				l = config.MaxWidth[i]
+			lenElem := len(elems[i].(string))
+			if i < len(config.MaxWidth) {
+				if config.MaxWidth[i] < 0 {
+					fmt.Printf("Columnize: negative MaxWidth value not supported - please use OutputWidth\n")
+				} else if config.MaxWidth[i] > 0 && config.MaxWidth[i] < lenElem {
+					lenElem = config.MaxWidth[i]
+				}
 			}
 			if len(widths) <= i {
-				widths = append(widths, l)
-			} else if widths[i] < l {
-				widths[i] = l
+				widths = append(widths, lenElem)
+			} else if widths[i] < lenElem {
+				widths[i] = lenElem
 			}
 		}
 	}
 
-	// If one of the columns has a negative width specification, set its width
-	// so that the entire output line has a width of the absolute value of the spec
+	// Get output width restriction
 
-	if config.negIndex >= 0 && config.negIndex < len(widths) {
-		maxOutputWidth := 0 - config.MaxWidth[config.negIndex]
-		if config.negIndex == 0 && len(config.MaxWidth) == 1 && len(widths) > 1 {
-			config.negIndex = len(widths) - 1 // Apply single negative value to last field
+	outputWidth := config.OutputWidth
+	if outputWidth == AUTO {
+		var e error
+		if outputWidth, e = GetConsoleWidth(); e != nil {
+			fmt.Printf("Unable to set AUTO OutputWidth: %s\n", e.Error())
 		}
+	}
+
+	// If the output width is restricted and the output line will exceed that width,
+	// attempt to meet the restriction by adjusting the width of the rightmost
+	// unrestricted column, or the rightmost column if all columns are restricted.
+
+	if outputWidth > 0 {
 		totalLineWidth := len(config.Prefix) + len(config.Glue)*(len(widths)-1)
-		for i, width := range widths {
-			if i != config.negIndex {
-				totalLineWidth += width
-			}
+		for _, width := range widths {
+			totalLineWidth += width
 		}
-		if maxOutputWidth > totalLineWidth {
-			widths[config.negIndex] = maxOutputWidth - totalLineWidth
-		} else {
-			config.negIndex = -1
+		if totalLineWidth > outputWidth {
+			adjIndex := -1
+			for i := len(widths) - 1; i >= 0; i-- {
+				if i >= len(config.MaxWidth) || config.MaxWidth[i] <= 0 {
+					adjIndex = i
+					break
+				}
+			}
+			if adjIndex < 0 {
+				adjIndex = len(widths) - 1
+			}
+			adjustedWidth := outputWidth - (totalLineWidth - widths[adjIndex])
+			if adjustedWidth > 0 {
+				widths[adjIndex] = adjustedWidth
+			}
 		}
 	}
 	return widths
@@ -115,7 +155,6 @@ func (c *Config) getStringFormat(widths []int, columns int) string {
 // configuration. Values from the right take precedence over the left side.
 func MergeConfig(a, b *Config) *Config {
 	var result Config = *a
-	result.negIndex = -1
 
 	// Return quickly if either side was nil
 	if a == nil || b == nil {
@@ -134,24 +173,11 @@ func MergeConfig(a, b *Config) *Config {
 	if b.Empty != "" {
 		result.Empty = b.Empty
 	}
+	if b.OutputWidth >= 0 || b.OutputWidth == AUTO {
+		result.OutputWidth = b.OutputWidth
+	}
 	if len(b.MaxWidth) > 0 {
-		for i, maxWidth := range b.MaxWidth {
-			if maxWidth < 0 {
-				// Negative width adjusts the column width so that the width of
-				// the entire output line is the abs value of the value specified.
-				// Only the first such specification is significant; others are ignored.
-				if result.negIndex < 0 {
-					result.negIndex = i
-				} else {
-					maxWidth = 0
-				}
-			}
-			if i < len(result.MaxWidth) {
-				result.MaxWidth[i] = maxWidth
-			} else {
-				result.MaxWidth = append(result.MaxWidth, maxWidth)
-			}
-		}
+		result.MaxWidth = b.MaxWidth
 	}
 
 	return &result
@@ -162,7 +188,7 @@ func MergeConfig(a, b *Config) *Config {
 func Format(lines []string, config *Config) string {
 	var result string
 
-	conf := MergeConfig(DefaultConfig(), config)
+	conf := MergeConfig(&defaultConfig, config)
 	widths := getWidthsFromLines(conf, lines)
 
 	// Create the formatted output using the format string
@@ -227,6 +253,29 @@ func truncateToWidth(elems *[]interface{}, extensionLineElems *[]string, widths 
 			(*extensionLineElems)[i] = strings.TrimSpace(stringElem[splitPoint:])
 		}
 
+	}
+	return
+}
+
+// Get the width of the console
+func GetConsoleWidth() (width int, e error) {
+	var rxGetWidth *regexp.Regexp
+	var command []string
+	if runtime.GOOS == "windows" {
+		command = []string{"mode", "con"}
+		rxGetWidth = regexp.MustCompile("Columns:\\s*(\\d+)")
+	} else {
+		command = []string{"stty", "size"}
+		rxGetWidth = regexp.MustCompile("\\d+\\s+(\\d+)")
+	}
+	cmd := exec.Command(command[0], command[1])
+	cmd.Stdin = os.Stdin
+	if out, err := cmd.Output(); err != nil {
+		e = err
+	} else if match := rxGetWidth.FindSubmatch(out); match != nil {
+		width, e = strconv.Atoi(string(match[1]))
+	} else {
+		e = fmt.Errorf("not in %s %s output\n%s", command[0], command[1], out)
 	}
 	return
 }
