@@ -271,7 +271,7 @@ func GetConsoleWidth() (width int, e error) {
 	cmd := exec.Command(command[0], command[1])
 	cmd.Stdin = os.Stdin
 	if out, err := cmd.Output(); err != nil {
-		fmt.Printf("Unable to get console width: %s (%s)", err.Error(), out)
+		fmt.Printf("Unable to get console width: %s (%s)\n", err.Error(), out)
 	} else if match := rxGetWidth.FindSubmatch(out); match != nil {
 		width, e = strconv.Atoi(string(match[1]))
 	} else {
