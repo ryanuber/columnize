@@ -73,8 +73,14 @@ func getElementsFromLine(config *Config, line string) []interface{} {
 // Examines a list of strings and determines how wide each column should be
 // considering all of the elements that need to be printed within it.
 func getWidthsFromLines(config *Config, lines []string) []int {
-	var widths []int
+	widths := calculateColumnWidths(config, lines)
+	outputWidth := getOutputWidth(config)
+	widths = adjustWidths(config, widths, outputWidth)
+	return widths
+}
 
+// Calculate column widths by comparing data width and MaxWidth
+func calculateColumnWidths(config *Config, lines []string) (widths []int) {
 	for _, line := range lines {
 		elems := getElementsFromLine(config, line)
 		for i := 0; i < len(elems); i++ {
@@ -93,21 +99,25 @@ func getWidthsFromLines(config *Config, lines []string) []int {
 			}
 		}
 	}
+	return
+}
 
-	// Get output width restriction
-
-	outputWidth := config.OutputWidth
+// Get output width specification
+func getOutputWidth(config *Config) (outputWidth int) {
+	outputWidth = config.OutputWidth
 	if outputWidth == AUTO {
 		var e error
 		if outputWidth, e = GetConsoleWidth(); e != nil {
 			fmt.Printf("Unable to set AUTO OutputWidth: %s\n", e.Error())
 		}
 	}
+	return
+}
 
-	// If the output width is restricted and the output line will exceed that width,
-	// attempt to meet the restriction by adjusting the width of the rightmost
-	// unrestricted column, or the rightmost column if all columns are restricted.
-
+// If the output width is restricted and the output line will exceed that width,
+// attempt to meet the restriction by adjusting the width of the rightmost
+// unrestricted column, or the rightmost column if all columns are restricted.
+func adjustWidths(config *Config, widths []int, outputWidth int) []int {
 	if outputWidth > 0 {
 		totalLineWidth := len(config.Prefix) + len(config.Glue)*(len(widths)-1)
 		for _, width := range widths {
