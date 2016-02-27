@@ -1,0 +1,13 @@
+{
+	"ImportPath": "github.com/tooda02/columnize",
+	"GoVersion": "go1.4.2",
+	"Packages": [
+		"."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/DeMille/termsize",
+			"Rev": "b7100f0f89ccfa4a591ca92363fe5d434f54666f"
+		}
+	]
+}

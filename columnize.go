@@ -2,13 +2,10 @@ package columnize
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"regexp"
-	"runtime"
-	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/tooda02/columnize/Godeps/_workspace/src/github.com/DeMille/termsize"
 )
 
 type Config struct {
@@ -35,25 +32,15 @@ const (
 	AUTO = -1
 )
 
-var (
-	defaultConfig Config = Config{
+// Returns a Config with default values.
+func DefaultConfig() *Config {
+	return &Config{
 		Delim:       "|",
 		Glue:        "  ",
 		Prefix:      "",
 		OutputWidth: -999,
 		MaxWidth:    []int{},
 	}
-)
-
-// Returns a Config with default values.
-func DefaultConfig() *Config {
-	var defaultConfigCopy Config = defaultConfig
-	return &defaultConfigCopy
-}
-
-// Sets the default Config
-func SetDefaultConfig(config Config) {
-	defaultConfig = config
 }
 
 // Returns a list of elements, each representing a single item which will
@@ -198,7 +185,7 @@ func MergeConfig(a, b *Config) *Config {
 func Format(lines []string, config *Config) string {
 	var result string
 
-	conf := MergeConfig(&defaultConfig, config)
+	conf := MergeConfig(DefaultConfig(), config)
 	widths := getWidthsFromLines(conf, lines)
 
 	// Create the formatted output using the format string
@@ -269,23 +256,8 @@ func truncateToWidth(elems *[]interface{}, extensionLineElems *[]string, widths 
 
 // Get the width of the console
 func GetConsoleWidth() (width int, e error) {
-	var rxGetWidth *regexp.Regexp
-	var command []string
-	if runtime.GOOS == "windows" {
-		command = []string{"mode", "con"}
-		rxGetWidth = regexp.MustCompile("Columns:\\s*(\\d+)")
-	} else {
-		command = []string{"stty", "size"}
-		rxGetWidth = regexp.MustCompile("\\d+\\s+(\\d+)")
-	}
-	cmd := exec.Command(command[0], command[1])
-	cmd.Stdin = os.Stdin
-	if out, err := cmd.Output(); err != nil {
-		fmt.Printf("Unable to get console width: %s (%s)\n", err.Error(), out)
-	} else if match := rxGetWidth.FindSubmatch(out); match != nil {
-		width, e = strconv.Atoi(string(match[1]))
-	} else {
-		e = fmt.Errorf("not in %s %s output\n%s", command[0], command[1], out)
+	if e = termsize.Init(); e == nil {
+		width, _, e = termsize.Size()
 	}
 	return
 }
