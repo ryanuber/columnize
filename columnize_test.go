@@ -1,6 +1,11 @@
 package columnize
 
-import "testing"
+import (
+	"fmt"
+	"math"
+	"strings"
+	"testing"
+)
 
 func TestListOfStringsInput(t *testing.T) {
 	input := []string{
@@ -239,4 +244,93 @@ func TestMergeConfig(t *testing.T) {
 	if m.Delim != "a" || m.Glue != "a" || m.Prefix != "a" || m.Empty != "a" {
 		t.Fatalf("bad: %#v", m)
 	}
+}
+
+func TestMaxWidth(t *testing.T) {
+	input := []string{
+		"Column a | Column b | Column c",
+		"xx | yy | zz",
+		"some quite long data | some more data | even longer data for the last column",
+		"this one will fit | a break | The quick brown fox jumps over the low lazy dog",
+		"qq | rr | ss",
+	}
+	config := Config{MaxWidth: []int{10, 0, 15}}
+	output := Format(input, &config)
+	expected := "Column a    Column b        Column c\n"
+	expected += "xx          yy              zz\n"
+	expected += "some quite  some more data  even longer\n"
+	expected += "long data                   data for the\n"
+	expected += "                            last column\n"
+	expected += "this one    a break         The quick brown\n"
+	expected += "will fit                    fox jumps over\n"
+	expected += "                            the low lazy\n"
+	expected += "                            dog\n"
+	expected += "qq          rr              ss"
+
+	if output != expected {
+		for i, c := range output {
+			expectedChar := " "
+			if i < len(expected) {
+				expectedChar = string(expected[i])
+			}
+			if c != rune(expectedChar[0]) {
+				nearStart := int(math.Max(0, float64(i-4)))
+				nearEnd := int(math.Min(float64(i+4), float64(len(output))))
+				near := strings.Replace(output[nearStart:nearEnd], "\n", " ", -1)
+				fmt.Printf("TestMaxWidth difference at column %d near \"%s\": got(%s) expected(%s)\n", i, near, string(c), string(expectedChar))
+			}
+		}
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+func TestOutputWidth(t *testing.T) {
+	input := []string{
+		"Column a | Column b | Column c",
+		"xx | yy | zz",
+		"some quite long data | some more data | even longer data for the last column",
+		"this one will fit | a break | The quick brown fox jumps over the low lazy dog",
+		"qq | rr | ss",
+	}
+	config := Config{OutputWidth: 60}
+	output := Format(input, &config)
+	expected := "Column a              Column b        Column c\n"
+	expected += "xx                    yy              zz\n"
+	expected += "some quite long data  some more data  even longer data for\n"
+	expected += "                                      the last column\n"
+	expected += "this one will fit     a break         The quick brown fox\n"
+	expected += "                                      jumps over the low\n"
+	expected += "                                      lazy dog\n"
+	expected += "qq                    rr              ss"
+
+	if output != expected {
+		for i, c := range output {
+			expectedChar := " "
+			if i < len(expected) {
+				expectedChar = string(expected[i])
+			}
+			if c != rune(expectedChar[0]) {
+				nearStart := int(math.Max(0, float64(i-4)))
+				nearEnd := int(math.Min(float64(i+4), float64(len(output))))
+				near := strings.Replace(output[nearStart:nearEnd], "\n", " ", -1)
+				fmt.Printf("TestOutputWidth difference at column %d near \"%s\": got(%s) expected(%s)\n", i, near, string(c), string(expectedChar))
+			}
+		}
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+func TestGetConsoleWidth(t *testing.T) {
+	if width, e := GetConsoleWidth(); e != nil {
+		t.Fatalf("Error getting console width: %s", e.Error())
+	} else {
+		fmt.Printf("Console width is %d\n", width)
+	}
+	config := Config{OutputWidth: AUTO}
+	input := []string{
+		"Column A | Column B | Column C",
+		"This is column A data | This is column B data | This is column C data that should wrap if the terminal width is too small for it",
+	}
+	output := Format(input, &config)
+	fmt.Printf("%s\n", output)
 }
