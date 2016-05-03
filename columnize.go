@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/CiscoCloud/columnize/Godeps/_workspace/src/github.com/DeMille/termsize"
+	"github.com/DeMille/termsize"
 )
 
 type Config struct {
