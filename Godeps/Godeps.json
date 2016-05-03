@@ -1,0 +1,14 @@
+{
+	"ImportPath": "github.com/CiscoCloud/columnize",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v62",
+	"Packages": [
+		"."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/DeMille/termsize",
+			"Rev": "b7100f0f89ccfa4a591ca92363fe5d434f54666f"
+		}
+	]
+}
