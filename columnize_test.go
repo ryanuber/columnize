@@ -1,6 +1,11 @@
 package columnize
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+
+	crand "crypto/rand"
+)
 
 func TestListOfStringsInput(t *testing.T) {
 	input := []string{
@@ -71,6 +76,42 @@ func TestColumnWidthCalculator(t *testing.T) {
 
 	if output != expected {
 		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+func BenchmarkColumnWidthCalculator(b *testing.B) {
+	// Generate the input
+	input := []string{
+		"UUID A | UUID B | Column C | Column D",
+	}
+
+	format := "%s|%s|%s|%s"
+	short := "short"
+
+	uuid := func() string {
+		buf := make([]byte, 16)
+		if _, err := crand.Read(buf); err != nil {
+			panic(fmt.Errorf("failed to read random bytes: %v", err))
+		}
+
+		return fmt.Sprintf("%08x-%04x-%04x-%04x-%12x",
+			buf[0:4],
+			buf[4:6],
+			buf[6:8],
+			buf[8:10],
+			buf[10:16])
+	}
+
+	for i := 0; i < 1000; i++ {
+		l := fmt.Sprintf(format, uuid(), uuid(), short, short)
+		input = append(input, l)
+	}
+
+	config := DefaultConfig()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		Format(input, config)
 	}
 }
 
