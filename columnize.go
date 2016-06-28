@@ -72,7 +72,7 @@ func (c *Config) getStringFormat(widths []int, columns int) string {
 
 	// Start with the prefix, if any was given. The buffer will not return an
 	// error so it does not need to be handled
-	_, _ = buf.WriteString(c.Prefix)
+	buf.WriteString(c.Prefix)
 
 	// Create the format string from the discovered widths
 	for i := 0; i < columns && i < len(widths); i++ {
