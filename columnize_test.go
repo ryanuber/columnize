@@ -82,7 +82,7 @@ func TestColumnWidthCalculator(t *testing.T) {
 func BenchmarkColumnWidthCalculator(b *testing.B) {
 	// Generate the input
 	input := []string{
-		"UUID A | UUID B | Column C | Column D",
+		"UUID A | UUID B | UUID C | Column D | Column E",
 	}
 
 	format := "%s|%s|%s|%s"
@@ -103,7 +103,7 @@ func BenchmarkColumnWidthCalculator(b *testing.B) {
 	}
 
 	for i := 0; i < 1000; i++ {
-		l := fmt.Sprintf(format, uuid(), uuid(), short, short)
+		l := fmt.Sprintf(format, uuid()[:8], uuid()[:12], uuid(), short, short)
 		input = append(input, l)
 	}
 

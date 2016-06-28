@@ -67,12 +67,12 @@ func getWidthsFromLines(config *Config, lines []string) []int {
 // returns a sprintf-style format string which can be used to print output
 // aligned properly with other lines using the same widths set.
 func (c *Config) getStringFormat(widths []int, columns int) string {
-	// Create the buffer
-	// 8 bytes per character * 8 characters per column * ~num columns
-	buf := bytes.NewBuffer(make([]byte, 0, 8*len(widths)*8))
+	// Create the buffer with an estimate of the length
+	buf := bytes.NewBuffer(make([]byte, 0, (6+len(c.Glue))*columns))
 
-	// Start with the prefix, if any was given.
-	buf.WriteString(c.Prefix)
+	// Start with the prefix, if any was given. The buffer will not return an
+	// error so it does not need to be handled
+	_, _ = buf.WriteString(c.Prefix)
 
 	// Create the format string from the discovered widths
 	for i := 0; i < columns && i < len(widths); i++ {
@@ -139,7 +139,7 @@ func Format(lines []string, config *Config) string {
 		numElems := len(elems)
 		stringfmt, ok := fmtCache[numElems]
 		if !ok {
-			stringfmt = conf.getStringFormat(widths, len(elems))
+			stringfmt = conf.getStringFormat(widths, numElems)
 			fmtCache[numElems] = stringfmt
 		}
 
