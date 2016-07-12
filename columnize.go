@@ -58,10 +58,10 @@ func MergeConfig(a, b *Config) *Config {
 	return &result
 }
 
-// getStringFormat, given a set of column widths and the number of columns in
+// stringFormat, given a set of column widths and the number of columns in
 // the current line, returns a sprintf-style format string which can be used
 // to print output aligned properly with other lines using the same widths set.
-func (c *Config) getStringFormat(widths []int, columns int) string {
+func stringFormat(c *Config, widths []int, columns int) string {
 	// Create the buffer with an estimate of the length
 	buf := bytes.NewBuffer(make([]byte, 0, (6+len(c.Glue))*columns))
 
@@ -80,13 +80,15 @@ func (c *Config) getStringFormat(widths []int, columns int) string {
 	return buf.String()
 }
 
-// getElementsFromLine returns a list of elements, each representing a single
+// elementsFromLine returns a list of elements, each representing a single
 // item which will belong to a column of output.
-func getElementsFromLine(config *Config, line string) []interface{} {
+func elementsFromLine(config *Config, line string) []interface{} {
 	seperated := strings.Split(line, config.Delim)
 	elements := make([]interface{}, len(seperated))
 	for i, field := range seperated {
 		value := strings.TrimSpace(field)
+
+		// Apply the empty value, if configured.
 		if value == "" && config.Empty != "" {
 			value = config.Empty
 		}
@@ -95,14 +97,14 @@ func getElementsFromLine(config *Config, line string) []interface{} {
 	return elements
 }
 
-// getWidthsFromLines examines a list of strings and determines how wide each
+// widthsFromLines examines a list of strings and determines how wide each
 // column should be considering all of the elements that need to be printed
 // within it.
-func getWidthsFromLines(config *Config, lines []string) []int {
+func widthsFromLines(config *Config, lines []string) []int {
 	widths := make([]int, 0, 8)
 
 	for _, line := range lines {
-		elems := getElementsFromLine(config, line)
+		elems := elementsFromLine(config, line)
 		for i := 0; i < len(elems); i++ {
 			l := len(elems[i].(string))
 			if len(widths) <= i {
@@ -119,7 +121,7 @@ func getWidthsFromLines(config *Config, lines []string) []int {
 // returns nicely aligned column-formatted text.
 func Format(lines []string, config *Config) string {
 	conf := MergeConfig(DefaultConfig(), config)
-	widths := getWidthsFromLines(conf, lines)
+	widths := widthsFromLines(conf, lines)
 
 	// Estimate the buffer size
 	glueSize := len(conf.Glue)
@@ -137,13 +139,13 @@ func Format(lines []string, config *Config) string {
 
 	// Create the formatted output using the format string
 	for _, line := range lines {
-		elems := getElementsFromLine(conf, line)
+		elems := elementsFromLine(conf, line)
 
 		// Get the string format using cache
 		numElems := len(elems)
 		stringfmt, ok := fmtCache[numElems]
 		if !ok {
-			stringfmt = conf.getStringFormat(widths, numElems)
+			stringfmt = stringFormat(conf, widths, numElems)
 			fmtCache[numElems] = stringfmt
 		}
 
