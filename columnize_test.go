@@ -75,7 +75,30 @@ func TestColumnWidthCalculator(t *testing.T) {
 	expected += "short          short          short"
 
 	if output != expected {
-		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+		printableProof := fmt.Sprintf("\nGot:      %+q", output)
+		printableProof += fmt.Sprintf("\nExpected: %+q", expected)
+		t.Fatalf("\n%s", printableProof)
+	}
+}
+
+func TestColumnWidthCalculatorNonASCII(t *testing.T) {
+	input := []string{
+		"Column A | Column B | Column C",
+		"⌘⌘⌘⌘⌘⌘⌘⌘ | Longer than B | Longer than C",
+		"short | short | short",
+	}
+
+	config := DefaultConfig()
+	output := Format(input, config)
+
+	expected := "Column A  Column B       Column C\n"
+	expected += "⌘⌘⌘⌘⌘⌘⌘⌘  Longer than B  Longer than C\n"
+	expected += "short     short          short"
+
+	if output != expected {
+		printableProof := fmt.Sprintf("\nGot:      %+q", output)
+		printableProof += fmt.Sprintf("\nExpected: %+q", expected)
+		t.Fatalf("\n%s", printableProof)
 	}
 }
 
