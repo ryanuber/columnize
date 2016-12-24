@@ -100,9 +100,22 @@ func elementsFromLine(config *Config, line string) []interface{} {
 // runeLen calculates the number of visible "characters" in a string
 func runeLen(s string) int {
 	l := 0
-	for _ = range s {
+	insideConsoleColor := false
+	for _, c := range s {
+		if c == '\x1b' { // start of esc color sequence
+			insideConsoleColor = true
+			continue
+		}
+		if insideConsoleColor {
+			if c == 'm' { // end of esc color sequence
+				insideConsoleColor = false
+			}
+			continue
+		}
+
 		l++
 	}
+
 	return l
 }
 
