@@ -3,6 +3,7 @@ package columnize
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -135,6 +136,10 @@ func widthsFromLines(config *Config, lines []string) []int {
 				widths[i] = l
 			}
 		}
+	}
+
+	if os.Getenv("DEBUG_COL") == "1" {
+		fmt.Println(widths)
 	}
 	return widths
 }
