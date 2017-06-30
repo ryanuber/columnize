@@ -155,6 +155,24 @@ func TestVariedInputSpacing(t *testing.T) {
 	}
 }
 
+func TestVariedInputSpacing_NoTrim(t *testing.T) {
+	input := []string{
+		"Column A|Column B|Column C",
+		"x|y|  z",
+	}
+
+	config := DefaultConfig()
+	config.NoTrim = true
+	output := Format(input, config)
+
+	expected := "Column A  Column B  Column C\n"
+	expected += "x         y           z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
 func TestUnmatchedColumnCounts(t *testing.T) {
 	input := []string{
 		"Column A | Column B | Column C",

@@ -18,8 +18,11 @@ type Config struct {
 	// The string by which columns of output will be prefixed.
 	Prefix string
 
-	// A replacement string to replace empty fields
+	// A replacement string to replace empty fields.
 	Empty string
+
+	// NoTrim disables automatic trimming of inputs.
+	NoTrim bool
 }
 
 // DefaultConfig returns a *Config with default values.
@@ -29,6 +32,7 @@ func DefaultConfig() *Config {
 		Glue:   "  ",
 		Prefix: "",
 		Empty:  "",
+		NoTrim: false,
 	}
 }
 
@@ -53,6 +57,9 @@ func MergeConfig(a, b *Config) *Config {
 	}
 	if b.Empty != "" {
 		result.Empty = b.Empty
+	}
+	if b.NoTrim {
+		result.NoTrim = true
 	}
 
 	return &result
@@ -86,7 +93,10 @@ func elementsFromLine(config *Config, line string) []interface{} {
 	separated := strings.Split(line, config.Delim)
 	elements := make([]interface{}, len(separated))
 	for i, field := range separated {
-		value := strings.TrimSpace(field)
+		value := field
+		if !config.NoTrim {
+			value = strings.TrimSpace(field)
+		}
 
 		// Apply the empty value, if configured.
 		if value == "" && config.Empty != "" {
