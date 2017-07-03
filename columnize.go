@@ -39,12 +39,15 @@ func DefaultConfig() *Config {
 // MergeConfig merges two config objects together and returns the resulting
 // configuration. Values from the right take precedence over the left side.
 func MergeConfig(a, b *Config) *Config {
-	var result Config = *a
-
 	// Return quickly if either side was nil
-	if a == nil || b == nil {
-		return &result
+	if a == nil {
+		return b
 	}
+	if b == nil {
+		return a
+	}
+
+	var result Config = *a
 
 	if b.Delim != "" {
 		result.Delim = b.Delim
