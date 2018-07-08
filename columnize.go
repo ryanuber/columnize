@@ -23,6 +23,9 @@ type Config struct {
 
 	// NoTrim disables automatic trimming of inputs.
 	NoTrim bool
+
+	// Considers the first row as header and capitalizes it
+	Header bool
 }
 
 // DefaultConfig returns a *Config with default values.
@@ -33,6 +36,7 @@ func DefaultConfig() *Config {
 		Prefix: "",
 		Empty:  "",
 		NoTrim: false,
+		Header: false,
 	}
 }
 
@@ -63,6 +67,9 @@ func MergeConfig(a, b *Config) *Config {
 	}
 	if b.NoTrim {
 		result.NoTrim = true
+	}
+	if b.Header {
+		result.Header = true
 	}
 
 	return &result
@@ -143,6 +150,12 @@ func widthsFromLines(config *Config, lines []string) []int {
 // returns nicely aligned column-formatted text.
 func Format(lines []string, config *Config) string {
 	conf := MergeConfig(DefaultConfig(), config)
+
+	// Handle header row
+	if conf.Header {
+		lines[0] = strings.ToUpper(lines[0])
+	}
+
 	widths := widthsFromLines(conf, lines)
 
 	// Estimate the buffer size
