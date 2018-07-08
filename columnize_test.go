@@ -338,3 +338,21 @@ func TestMergeConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestHeaders(t *testing.T) {
+	input := []string{
+		"Column A | Column B | Column C",
+		"x | y | z",
+	}
+
+	config := DefaultConfig()
+	config.Header = true
+	output := Format(input, config)
+
+	expected := "COLUMN A  COLUMN B  COLUMN C\n"
+	expected += "x         y         z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
