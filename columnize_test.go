@@ -338,3 +338,278 @@ func TestMergeConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestListOfStringsInputForStringOfStrings(t *testing.T) {
+	input := [][]string{
+		{"Column A", "Column B", "Column C" , "Column V"},
+		{"x", "y", "z" ,"p"},
+
+	}
+
+	config := DefaultConfig()
+	config.Empty = ""
+	output := FormatWithSliceOfStrings(input, config)
+
+	expected := "Column A  Column B  Column C  Column V\n"
+	expected += "x         y         z         p"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+
+func TestListOfStringsInputWithSliceOfStrings(t *testing.T) {
+	input := [][]string{
+		{"Column A", "Column B", "Column C"},
+		{"x","y","z"},
+	}
+
+	config := DefaultConfig()
+	output := FormatWithSliceOfStrings(input, config)
+
+	expected := "Column A  Column B  Column C\n"
+	expected += "x         y         z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+func TestEmptyLinesOutputWithSliceOfStrings(t *testing.T) {
+	input := [][]string{
+		{"Column A","Column B","Column C"},
+		{""},
+		{"x","y","z"},
+	}
+
+	config := DefaultConfig()
+	output := FormatWithSliceOfStrings(input, config)
+
+	expected := "Column A  Column B  Column C\n"
+	expected += "\n"
+	expected += "x         y         z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+func TestLeadingSpacePreservedWithSliceOfStrings(t *testing.T) {
+	input := [][]string{
+		{"","Column B","Column C"},
+		{"x","y","z"},
+	}
+
+	config := DefaultConfig()
+	output := FormatWithSliceOfStrings(input, config)
+
+	expected := "   Column B  Column C\n"
+	expected += "x  y         z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+func TestColumnWidthCalculatorWithSliceOfStrings(t *testing.T) {
+	input := [][]string{
+		{"  Column A       ","Column B","Column C"},
+		{"Longer than A","Longer than B","Longer than C"},
+		{"short","short","short"},
+	}
+
+	config := DefaultConfig()
+	output := FormatWithSliceOfStrings(input, config)
+
+	expected := "Column A       Column B       Column C\n"
+	expected += "Longer than A  Longer than B  Longer than C\n"
+	expected += "short          short          short"
+
+	if output != expected {
+		printableProof := fmt.Sprintf("\nGot:      %+q", output)
+		printableProof += fmt.Sprintf("\nExpected: %+q", expected)
+		t.Fatalf("\n%s", printableProof)
+	}
+}
+
+func TestColumnWidthCalculatorNonASCIIWithSliceOfStrings(t *testing.T) {
+	input := [][]string{
+		{"Column A","Column B","Column C"},
+		{"⌘⌘⌘⌘⌘⌘⌘⌘","Longer than B","Longer than C"},
+		{"short","short","short"},
+	}
+
+	config := DefaultConfig()
+	output := FormatWithSliceOfStrings(input, config)
+	expected := "Column A  Column B       Column C\n"
+	expected += "⌘⌘⌘⌘⌘⌘⌘⌘  Longer than B  Longer than C\n"
+	expected += "short     short          short"
+	if output != expected {
+		printableProof := fmt.Sprintf("\nGot:      %+q", output)
+		printableProof += fmt.Sprintf("\nExpected: %+q", expected)
+		t.Fatalf("\n%s", printableProof)
+	}
+}
+
+func BenchmarkColumnWidthCalculator2(b *testing.B) {
+	// Generate the input
+	input := [][]string{
+		{"UUID A","UUID B", "UUID C","Column D ", " Column E"},
+	}
+
+	short := "short"
+
+	uuid := func() string {
+		buf := make([]byte, 16)
+		if _, err := crand.Read(buf); err != nil {
+			panic(fmt.Errorf("failed to read random bytes: %v", err))
+		}
+
+		return fmt.Sprintf("%08x-%04x-%04x-%04x-%12x",
+			buf[0:4],
+			buf[4:6],
+			buf[6:8],
+			buf[8:10],
+			buf[10:16])
+	}
+
+	for i := 0; i < 1000; i++ {
+		l := []string {uuid()[:8], uuid()[:12], uuid(), short, short}
+		input = append(input, l)
+	}
+
+	config := DefaultConfig()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		FormatWithSliceOfStrings(input, config)
+	}
+}
+
+func TestVariedInputSpacingWithSliceOfStrings(t *testing.T) {
+	input := [][]string{
+		{"Column A       ","Column B","    Column C"},
+		{"x","y","          z"},
+	}
+
+	config := DefaultConfig()
+	output := FormatWithSliceOfStrings(input, config)
+
+	expected := "Column A  Column B  Column C\n"
+	expected += "x         y         z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+func TestVariedInputSpacing_NoTrimWithSliceOfStrings(t *testing.T) {
+	input := [][]string{
+		{"Column A","Column B","Column C"},
+		{"x","y","  z"},
+	}
+
+	config := DefaultConfig()
+	config.NoTrim = true
+	output := FormatWithSliceOfStrings(input, config)
+
+	expected := "Column A  Column B  Column C\n"
+	expected += "x         y           z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+func TestUnmatchedColumnCountsWithSliceOfStrings(t *testing.T) {
+	input := [][]string{
+		{"Column A "," Column B "," Column C"},
+		{"Value A "," Value B"},
+		{"Value A ", " Value B "," Value C "," Value D"},
+	}
+
+	config := DefaultConfig()
+	output := FormatWithSliceOfStrings(input, config)
+
+	expected := "Column A  Column B  Column C\n"
+	expected += "Value A   Value B\n"
+	expected += "Value A   Value B   Value C   Value D"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+func TestAlternateSpacingStringWithSliceOfStrings(t *testing.T) {
+	input := [][]string{
+		{"Column A "," Column B "," Column C"},
+		{"x "," y "," z"},
+	}
+
+	config := DefaultConfig()
+	config.Glue = "    "
+	output := FormatWithSliceOfStrings(input, config)
+
+	expected := "Column A    Column B    Column C\n"
+	expected += "x           y           z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+
+func TestAlternatePrefixStringWithSliceOfStrings(t *testing.T) {
+	input := [][]string{
+		{"Column A "," Column B "," Column C"},
+		{"x "," y "," z"},
+	}
+
+	config := DefaultConfig()
+	config.Prefix = "  "
+	output := FormatWithSliceOfStrings(input, config)
+
+	expected := "  Column A  Column B  Column C\n"
+	expected += "  x         y         z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+func TestEmptyFieldReplacementWithSliceOfStrings(t *testing.T) {
+	input := [][]string{
+		{"Column A "," Column B "," Column C"},
+		{"x "," "," z"},
+	}
+
+	config := DefaultConfig()
+	config.Empty = "<none>"
+	output := FormatWithSliceOfStrings(input, config)
+
+	expected := "Column A  Column B  Column C\n"
+	expected += "x         <none>    z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+
+func TestEmptyConfigValuesWithSliceOfStrings(t *testing.T) {
+	input := [][]string{
+		{"Column A "," Column B "," Column C"},
+		{"x "," y "," z"},
+	}
+
+	config := Config{}
+	output := FormatWithSliceOfStrings(input, &config)
+
+	expected := "Column A  Column B  Column C\n"
+	expected += "x         y         z"
+
+	if output != expected {
+		t.Fatalf("\nexpected:\n%s\n\ngot:\n%s", expected, output)
+	}
+}
+

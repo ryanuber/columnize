@@ -139,6 +139,23 @@ func widthsFromLines(config *Config, lines []string) []int {
 	return widths
 }
 
+func widthsFromSlices(rows [][] string) []int {
+	widths := make([]int, 0, 8)
+
+	for _, row := range rows {
+		for i, element := range row {
+			elementLength := runeLen(element)
+			if len(widths) <= i {
+				widths = append(widths, elementLength)
+			} else if widths[i] < elementLength {
+				widths[i] = elementLength
+			}
+		}
+	}
+
+	return widths;
+}
+
 // Format is the public-facing interface that takes a list of strings and
 // returns nicely aligned column-formatted text.
 func Format(lines []string, config *Config) string {
@@ -183,6 +200,69 @@ func Format(lines []string, config *Config) string {
 	}
 
 	return result
+}
+
+func FormatWithSliceOfStrings(lines [][]string, config *Config) string {
+	conf := MergeConfig(DefaultConfig(), config)
+	lines = formatSlices(lines, config)
+
+	widths := widthsFromSlices(lines)
+	glueSize := len(conf.Glue)
+	var size int
+	for _, w := range widths {
+		size += w + glueSize
+	}
+	size *= len(lines)
+
+	buf := bytes.NewBuffer(make([]byte, 0, size))
+
+	// Create a cache for the string formats
+	fmtCache := make(map[int]string, 16)
+
+	// Create the formatted output using the format string
+	for _, line := range lines {
+		elems := line
+
+		// Get the string format using cache
+		numElems := len(elems)
+
+		stringfmt, ok := fmtCache[numElems]
+		if !ok {
+			stringfmt = stringFormat(conf, widths, numElems)
+			fmtCache[numElems] = stringfmt
+		}
+
+		elemsInterface := make([]interface{}, len(elems))
+		for i, v := range elems {
+			elemsInterface[i] = v
+		}
+		fmt.Fprintf(buf, stringfmt, elemsInterface...)
+	}
+
+	// Get the string result
+	result := buf.String()
+
+	// Remove trailing newline without removing leading/trailing space
+	if n := len(result); n > 0 && result[n-1] == '\n' {
+		result = result[:n-1]
+	}
+
+	return result
+}
+
+func formatSlices(rows [][]string, config *Config) [][]string {
+	for i, row := range rows {
+		for j, val := range row {
+			if !config.NoTrim {
+				val = strings.TrimSpace(val)
+			}
+			if val == "" && config.Empty != "" {
+				val = config.Empty
+			}
+			rows[i][j] = val
+		}
+	}
+	return rows
 }
 
 // SimpleFormat is a convenience function to format text with the defaults.
