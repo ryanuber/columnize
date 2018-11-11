@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"unicode"
 )
 
 // Config can be used to tune certain parameters which affect the way
@@ -115,6 +116,10 @@ func runeLen(s string) int {
 		}
 
 		l++
+		if unicode.Is(unicode.Scripts["Han"], rune(c)) {
+			l++
+		}
+
 	}
 
 	return l
@@ -176,6 +181,7 @@ func Format(lines []string, config *Config) string {
 			fmtCache[numElems] = stringfmt
 		}
 
+		// %-21s, 如果中文会有问题
 		fmt.Fprintf(buf, stringfmt, elems...)
 	}
 

@@ -7,6 +7,29 @@ import (
 	crand "crypto/rand"
 )
 
+func TestSimpleFormatWithChinese(t *testing.T) {
+	lines := []string{}
+	lines = append(lines, fmt.Sprintf("%s|%s", "阿尔法项目", "10.187.131.227"))
+	lines = append(lines, fmt.Sprintf("%s|%s", "ide.cc.polaris.jd.com", "10.191.92.130"))
+
+	println(Format(lines, &Config{Glue: "  ", Empty: " "}))
+	println()
+	fmt.Printf("%-21s %s\n", "阿尔法项目", "abc")
+	fmt.Printf("%-21s %s\n", "ide.cc.polaris.jd.com", "cm")
+}
+
+func TestRuneLen(t *testing.T) {
+	if runeLen("ab") != 2 {
+		t.Fatalf("ab should 2")
+	}
+	if runeLen("我") != 2 {
+		t.Fatalf("我 should 2")
+	}
+	if runeLen("我b") != 3 {
+		t.Fatalf("我b should 3")
+	}
+}
+
 func TestListOfStringsInput(t *testing.T) {
 	input := []string{
 		"Column A | Column B | Column C",
@@ -210,7 +233,7 @@ func TestAlternateSpacingString(t *testing.T) {
 	}
 }
 
-func TestSimpleFormat(t *testing.T) {
+func TestSimpleFormatBasic(t *testing.T) {
 	input := []string{
 		"Column A | Column B | Column C",
 		"x | y | z",
