@@ -181,8 +181,31 @@ func Format(lines []string, config *Config) string {
 			fmtCache[numElems] = stringfmt
 		}
 
-		// %-21s, 如果中文会有问题
-		fmt.Fprintf(buf, stringfmt, elems...)
+		if false {
+			// 原作者的逻辑
+			// fmt.Fprintf("%-21s  %s", "我们", "12.21.212.1"), 如果中文会有问题
+			fmt.Fprintf(buf, stringfmt, elems...)
+		} else {
+			// 手动解决
+			fmt.Fprintf(buf, conf.Prefix)
+			for col, elem := range elems {
+				s := elem.(string)
+				for _, c := range s {
+					fmt.Fprintf(buf, string(c))
+				}
+
+				if col == len(elems)-1 {
+					// 最后一列
+					fmt.Fprintf(buf, "\n")
+				} else {
+					// space padding
+					fmt.Fprintf(buf, strings.Repeat(" ", widths[col]-runeLen(s)))
+					// glue padding
+					fmt.Fprintf(buf, conf.Glue)
+				}
+
+			}
+		}
 	}
 
 	// Get the string result
