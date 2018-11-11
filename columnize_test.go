@@ -8,7 +8,7 @@ import (
 )
 
 func TestSimpleFormatWithChinese(t *testing.T) {
-	lines := []string{}
+	lines := []string{"CPU%|IP"}
 	lines = append(lines, fmt.Sprintf("%s|%s", "阿尔法项目", "10.187.131.227"))
 	lines = append(lines, fmt.Sprintf("%s|%s", "ide.cc.polaris.jd.com", "10.191.92.130"))
 

@@ -191,7 +191,7 @@ func Format(lines []string, config *Config) string {
 			for col, elem := range elems {
 				s := elem.(string)
 				for _, c := range s {
-					fmt.Fprintf(buf, string(c))
+					fmt.Fprintf(buf, strings.Replace(string(c), "%", "%%", -1))
 				}
 
 				if col == len(elems)-1 {
